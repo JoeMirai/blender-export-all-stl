@@ -9,6 +9,8 @@ A small Blender add-on: click **Export All To…**, name your folder, and get on
 3. In the 3D viewport, press **N**, open **STL Export**, and click **Export All To…**.
 4. Enter a folder name, optionally change the parent folder, and confirm.
 
+**Export Joined Objects Together** is checked by default: meshes joined with Ctrl+J produce one STL containing all their parts. Uncheck it to export each disconnected mesh part separately. STL stores triangles without object grouping, so slicers can still separate disconnected parts after import.
+
 Existing folders are preserved: repeated exports create `Folder (2)`, `Folder (3)`, etc. Object names become filenames; invalid characters and duplicate names are handled automatically.
 
 Exports every mesh in the current scene, including hidden meshes, with evaluated modifiers and world transforms. Cameras, lights, curves, and collection instances are skipped. Convert curves to meshes first if needed. Work in Object Mode.

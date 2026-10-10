@@ -31,3 +31,26 @@ with tempfile.TemporaryDirectory() as destination:
     assert list(bpy.context.selected_objects) == selected
 addon.unregister()
 print("PASS: hidden meshes, modifiers, binary STL, separate files, folder collisions, selection preservation")
+
+# Real Ctrl+J equivalent: two disconnected cubes become one Blender object.
+addon.register()
+for obj in list(bpy.data.objects):
+    bpy.data.objects.remove(obj, do_unlink=True)
+bpy.ops.mesh.primitive_cube_add(location=(0, 0, 0))
+first = bpy.context.object
+bpy.ops.mesh.primitive_cube_add(location=(4, 0, 0))
+second = bpy.context.object
+first.select_set(True)
+bpy.ops.object.join()
+assert len([o for o in bpy.context.scene.objects if o.type == 'MESH']) == 1
+with tempfile.TemporaryDirectory() as destination:
+    assert bpy.ops.export_mesh.all_stl_to_folder(folder_name='Joined', destination=destination) == {'FINISHED'}
+    joined_files = list((Path(destination) / 'Joined').glob('*.stl'))
+    assert len(joined_files) == 1
+    assert struct.unpack_from('<I', joined_files[0].read_bytes(), 80)[0] == 24
+    assert bpy.ops.export_mesh.all_stl_to_folder(folder_name='Split', destination=destination, keep_joined=False) == {'FINISHED'}
+    split_files = list((Path(destination) / 'Split').glob('*.stl'))
+    assert len(split_files) == 2
+    assert all(struct.unpack_from('<I', p.read_bytes(), 80)[0] == 12 for p in split_files)
+addon.unregister()
+print('PASS: Ctrl+J joined cubes stay in one STL by default; checkbox off exports two loose parts')
