@@ -17,8 +17,10 @@ second.modifiers.new("Subdivision", "SUBSURF").levels = 1
 selected = list(bpy.context.selected_objects)
 with tempfile.TemporaryDirectory() as destination:
     for _ in range(2):
-        assert bpy.ops.export_mesh.all_stl_to_folder(folder_name="Test", destination=destination) == {"FINISHED"}
+        assert bpy.ops.export_mesh.all_stl_to_folder(folder_name="Test", destination=destination, include_hidden=True) == {"FINISHED"}
     assert (Path(destination) / "Test (2)").is_dir()
+    assert bpy.ops.export_mesh.all_stl_to_folder(folder_name="Visible", destination=destination) == {"FINISHED"}
+    assert len(list((Path(destination) / "Visible").glob("*.stl"))) == 1
     files = list((Path(destination) / "Test").glob("*.stl"))
     assert len(files) == 2, files
     assert any(p.name == "Hidden_Part.stl" for p in files)
@@ -52,5 +54,8 @@ with tempfile.TemporaryDirectory() as destination:
     split_files = list((Path(destination) / 'Split').glob('*.stl'))
     assert len(split_files) == 2
     assert all(struct.unpack_from('<I', p.read_bytes(), 80)[0] == 12 for p in split_files)
+    bpy.ops.mesh.primitive_cube_add(location=(12, 0, 0))
+    assert bpy.ops.export_mesh.all_stl_to_folder(folder_name='Selected', destination=destination, selected_only=True) == {'FINISHED'}
+    assert len(list((Path(destination) / 'Selected').glob('*.stl'))) == 1
 addon.unregister()
 print('PASS: Ctrl+J joined cubes stay in one STL by default; checkbox off exports two loose parts')

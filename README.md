@@ -13,7 +13,7 @@ A small Blender add-on: click **Export All To…**, name your folder, and get on
 
 Existing folders are preserved: repeated exports create `Folder (2)`, `Folder (3)`, etc. Object names become filenames; invalid characters and duplicate names are handled automatically.
 
-Exports every mesh in the current scene, including hidden meshes, with evaluated modifiers and world transforms. Cameras, lights, curves, and collection instances are skipped. Convert curves to meshes first if needed. Work in Object Mode.
+Exports visible meshes in the current scene with evaluated modifiers and world transforms. Enable **Selected Objects Only** to export just your selection, or **Include Hidden Objects** to include hidden source/reference meshes. Cameras, lights, curves, and collection instances are skipped. Convert curves to meshes first if needed. Work in Object Mode.
 
 STL is unitless; coordinates use Blender units without automatic millimeter conversion. Selection is preserved. Designed for Blender 3.6+; tested in Blender 5.2.
 

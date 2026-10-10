@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Export All STL to Downloads",
     "author": "JoeMirai",
-    "version": (1, 1, 0),
+    "version": (1, 2, 0),
     "blender": (3, 6, 0),
     "location": "View3D > Sidebar > STL Export",
     "description": "Export every scene mesh into its own STL in a new folder",
@@ -87,6 +87,15 @@ class EXPORTALLSTL_OT_export(bpy.types.Operator):
         default=True,
     )
 
+    selected_only: BoolProperty(
+        name="Selected Objects Only", default=False,
+        description="Export only selected mesh objects; select a joined object to export just that assembly",
+    )
+    include_hidden: BoolProperty(
+        name="Include Hidden Objects", default=False,
+        description="Also export hidden source and reference meshes when exporting the whole scene",
+    )
+
     def invoke(self, context, event):
         self.destination = downloads_directory()
         if bpy.data.filepath:
@@ -97,15 +106,21 @@ class EXPORTALLSTL_OT_export(bpy.types.Operator):
         self.layout.prop(self, "folder_name")
         self.layout.prop(self, "destination")
         self.layout.prop(self, "keep_joined")
+        self.layout.prop(self, "selected_only")
+        row = self.layout.row()
+        row.enabled = not self.selected_only
+        row.prop(self, "include_hidden")
         self.layout.label(text="One STL per object." if self.keep_joined else "One STL per connected mesh part.")
 
     def execute(self, context):
         if context.mode != "OBJECT":
             self.report({"ERROR"}, "Switch to Object Mode before exporting")
             return {"CANCELLED"}
-        objects = [obj for obj in context.scene.objects if obj.type == "MESH"]
+        source = context.selected_objects if self.selected_only else context.scene.objects
+        objects = [obj for obj in source if obj.type == "MESH" and
+                   (self.selected_only or self.include_hidden or obj.visible_get(view_layer=context.view_layer))]
         if not objects:
-            self.report({"ERROR"}, "No mesh objects in the scene")
+            self.report({"ERROR"}, "No mesh objects match the export options")
             return {"CANCELLED"}
         folder = safe_name(self.folder_name)
         parent = Path(bpy.path.abspath(self.destination)).expanduser()
